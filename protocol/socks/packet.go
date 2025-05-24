@@ -57,20 +57,28 @@ func (c *AssociatePacketConn) ReadFrom(p []byte) (n int, addr net.Addr, err erro
 }
 
 func (c *AssociatePacketConn) WriteTo(p []byte, addr net.Addr) (n int, err error) {
-	destination := M.SocksaddrFromNet(addr)
-	buffer := buf.NewSize(3 + M.SocksaddrSerializer.AddrPortLen(destination) + len(p))
-	defer buffer.Release()
-	common.Must(buffer.WriteZeroN(3))
-	err = M.SocksaddrSerializer.WriteAddrPort(buffer, destination)
-	if err != nil {
-		return
-	}
-	_, err = buffer.Write(p)
-	if err != nil {
-		return
-	}
-	return c.conn.Write(buffer.Bytes())
+    destination := M.SocksaddrFromNet(addr)
+    buffer := buf.NewSize(3 + M.SocksaddrSerializer.AddrPortLen(destination) + len(p))
+    defer buffer.Release()
+    common.Must(buffer.WriteZeroN(3))
+    err = M.SocksaddrSerializer.WriteAddrPort(buffer, destination)
+    if err != nil {
+        return 0, err
+    }
+	
+    _, err = buffer.Write(p)
+    if err != nil {
+        return 0, err
+    }
+
+    _, err = c.conn.Write(buffer.Bytes())
+    if err != nil {
+        return 0, err
+    }
+
+    return len(p), nil
 }
+
 
 func (c *AssociatePacketConn) ReadPacket(buffer *buf.Buffer) (destination M.Socksaddr, err error) {
 	err = c.conn.ReadBuffer(buffer)
