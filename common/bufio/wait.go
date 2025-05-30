@@ -7,7 +7,13 @@ import (
 )
 
 func CreateReadWaiter(reader io.Reader) (N.ReadWaiter, bool) {
-	reader = N.UnwrapReader(reader)
+	if reader == nil {
+        return nil, false
+    }
+    reader = N.UnwrapReader(reader)
+    if reader == nil {
+        return nil, false
+    }
 	if readWaiter, isReadWaiter := reader.(N.ReadWaiter); isReadWaiter {
 		return readWaiter, true
 	}
