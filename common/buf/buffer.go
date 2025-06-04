@@ -18,6 +18,7 @@ type Buffer struct {
 	end      int
 	capacity int
 	refs     atomic.Int32
+	freed    atomic.Bool
 	managed  bool
 }
 
@@ -293,6 +294,9 @@ func (b *Buffer) DecRef() {
 }
 
 func (b *Buffer) Release() {
+	if b.freed.Swap(true) {
+		return
+	}
 	if b == nil || !b.managed {
 		return
 	}
